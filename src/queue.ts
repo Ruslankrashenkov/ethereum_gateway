@@ -5,7 +5,7 @@ import IORedis from 'ioredis';
 
 const connection = new IORedis(6379, 'memory_db');
 
-export const queue = new Queue('PaymentGateway', { connection });
+export default new Queue('PaymentGateway', { connection });
 
 /*
 onStart.push(

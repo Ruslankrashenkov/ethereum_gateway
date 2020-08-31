@@ -115,7 +115,7 @@ export async function ethereumToBitsharesJob(job: Job): Promise<void> {
   }
 
   if (tr.status === 'issue_ok') {
-    await sequelize.transaction(async (transaction) => {
+    await sequelize.transaction(async (transaction: Transaction) => {
       tr.status = 'ok';
 
       await tr.save({ transaction });

@@ -1,6 +1,6 @@
 import EthereumHDKey from 'ethereumjs-wallet/hdkey';
-import { Application, Request, Response } from 'express';
-import { Sequelize, Op as SequelizeOp } from 'sequelize';
+import { Request, Response } from 'express';
+import { Sequelize, Op as SequelizeOp, Transaction } from 'sequelize';
 
 import { app, appConfig } from './app';
 import {
@@ -9,12 +9,12 @@ import {
   Wallets as WalletsModel,
   sequelize,
 } from './models';
-import { queue } from './queue';
+import queue from './queue';
 
 class UnknownPayment extends Error {}
 
 async function getTransaction(rq: Request, rs: Response): Promise<void> {
-  const tr = await sequelize.transaction(async (transaction) => {
+  const tr = await sequelize.transaction(async (transaction: Transaction) => {
     return TransactionsModel.findByPk(rq.params.id, {
       attributes: [
         'tickerFrom',
@@ -62,14 +62,14 @@ async function getTransaction(rq: Request, rs: Response): Promise<void> {
   });
 
   if (tr === null) {
-    await rs.status(404).json({});
+    rs.status(404).json({});
   } else {
-    await rs.status(200).json(tr.toJSON());
+    rs.status(200).json(tr.toJSON());
   }
 }
 
 async function postTransaction(rq: Request, rs: Response): Promise<void> {
-  await sequelize.transaction(async (transaction) => {
+  await sequelize.transaction(async (transaction: Transaction) => {
     const wallet = (
       await WalletsModel.findOrCreate({
         attributes: ['id', 'payment'],
@@ -127,7 +127,7 @@ async function postTransaction(rq: Request, rs: Response): Promise<void> {
         { transaction }
       );
     } else {
-      derivedWallet = wallet.derivedWallets[0];
+      [derivedWallet] = wallet.derivedWallets;
     }
 
     const tr = (
@@ -157,7 +157,7 @@ async function postTransaction(rq: Request, rs: Response): Promise<void> {
       await job.retry();
     }
 
-    await rs.status(200).json({
+    rs.status(200).json({
       id: tr.id,
       invoiceFrom: derivedWallet.invoice,
       status: tr.status,

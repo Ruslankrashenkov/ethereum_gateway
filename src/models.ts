@@ -47,7 +47,7 @@ export class Wallets extends Model {
 
   public payment?: Payment;
 
-  public invoice?: any;
+  public invoice?: string;
 
   public readonly derivedWallets?: DerivedWallets[];
 
@@ -102,13 +102,13 @@ export class DerivedWallets extends Model {
 
   public payment?: Payment;
 
-  public invoice?: any;
+  public invoice?: string;
 
   public walletId!: number;
 
   public readonly wallet?: Wallets;
 
-  public readonly transactions?: Transactions[];
+  public readonly orders?: Orders[];
 
   public readonly createdAt!: Date;
 
@@ -118,7 +118,7 @@ export class DerivedWallets extends Model {
 
   public static associations: {
     wallet: BelongsTo<DerivedWallets, Wallets>;
-    transactions: HasMany<DerivedWallets, Transactions>;
+    orders: HasMany<DerivedWallets, Orders>;
   };
 
   public getWallet!: BelongsToGetAssociationMixin<Wallets>;
@@ -127,114 +127,85 @@ export class DerivedWallets extends Model {
 
   public createWallet!: BelongsToCreateAssociationMixin<Wallets>;
 
-  public getTransactions!: HasManyGetAssociationsMixin<Transactions>;
+  public getOrders!: HasManyGetAssociationsMixin<Orders>;
 
-  public setTransactions!: HasManySetAssociationsMixin<Transactions, number>;
+  public setOrders!: HasManySetAssociationsMixin<Orders, string>;
 
-  public addTransactions!: HasManyAddAssociationsMixin<Transactions, number>;
+  public addOrders!: HasManyAddAssociationsMixin<Orders, string>;
 
-  public addTransaction!: HasManyAddAssociationMixin<Transactions, number>;
+  public addOrder!: HasManyAddAssociationMixin<Orders, string>;
 
-  public removeTransaction!: HasManyRemoveAssociationMixin<
-    Transactions,
-    number
-  >;
+  public removeOrders!: HasManyRemoveAssociationsMixin<Orders, string>;
 
-  public removeTransactions!: HasManyRemoveAssociationsMixin<
-    Transactions,
-    number
-  >;
+  public removeOrder!: HasManyRemoveAssociationMixin<Orders, string>;
 
-  public createTransactions!: HasManyCreateAssociationMixin<Transactions>;
+  public createOrder!: HasManyCreateAssociationMixin<Orders>;
 
-  public hasTransaction!: HasManyHasAssociationMixin<Transactions, number>;
+  public hasOrders!: HasManyHasAssociationsMixin<Orders, string>;
 
-  public hasTransactions!: HasManyHasAssociationsMixin<Transactions, number>;
+  public hasOrder!: HasManyHasAssociationMixin<Orders, string>;
 
-  public countTransactions!: HasManyCountAssociationsMixin;
+  public countOrders!: HasManyCountAssociationsMixin;
 }
 
-export type Ticker = 'USDT' | 'FINTEH.USDT';
+export type Coin = 'USDT' | 'FINTEH.USDT';
 
-export type TransactionsStatusInitial =
-  | 'pending'
-  | 'receive_ok'
-  | 'issue_commit_ok'
-  | 'issue_ok'
-  | 'burn_commit_ok'
-  | 'burn_ok'
-  | 'transfer_from_commit_ok'
-  | 'transfer_from_ok'
-  | 'transfer_to_commit_ok'
-  | 'transfer_to_ok';
-
-export type TransactionsStatus =
-  | TransactionsStatusInitial
-  | 'receive_pending'
-  | 'receive_err'
-  | 'issue_commit_err'
-  | 'issue_pending'
-  | 'issue_err'
-  | 'burn_commit_err'
-  | 'burn_pending'
-  | 'burn_err'
-  | 'transfer_from_commit_err'
-  | 'transfer_from_pending'
-  | 'transfer_from_err'
-  | 'transfer_to_commit_err'
-  | 'transfer_to_pending'
-  | 'transfer_to_err'
-  | 'ok';
-
-export interface TransactionsTxRaw {
+export interface TxRaw {
   [key: string]: any;
 }
 
-export interface TransactionsTx {
-  tx?: TransactionsTxRaw;
-  txId?: number | string;
-  txIndex?: number;
-  [key: string]: any;
+export class Txs extends Model {
+  public id!: string;
+
+  public coin!: Coin;
+
+  public txId?: string;
+
+  public fromAddress?: string;
+
+  public toAddress?: string;
+
+  public amount!: string;
+
+  public txCreatedAt!: Date;
+
+  public confirmations!: number;
+
+  public maxConfirmations!: number;
+
+  public tx?: TxRaw;
+
+  public readonly createdAt!: Date;
+
+  public readonly updatedAt!: Date;
+
+  public readonly version!: number;
 }
 
-export class Transactions extends Model {
-  public id!: number;
+export type OrderType = 'TRASH' | 'DEPOSIT' | 'WITHDRAWAL';
+
+export type Party = 'INIT' | 'IN_CREATED' | 'OUT_CREATED';
+
+export class Orders extends Model {
+  public id!: string;
 
   public jobId!: string;
-
-  public tickerFrom!: Ticker;
-
-  public amountFrom?: string;
-
-  public tickerTo!: Ticker;
-
-  public amountTo?: string;
-
-  public status!: TransactionsStatus;
-
-  public txReceive?: TransactionsTx;
-
-  public txReceiveCreatedAt?: Date;
-
-  public txIssue?: TransactionsTx;
-
-  public txIssueCreatedAt?: Date;
-
-  public txBurn?: TransactionsTx;
-
-  public txBurnCreatedAt?: Date;
-
-  public txTransferFrom?: TransactionsTx;
-
-  public txTransferFromCreatedAt?: Date;
-
-  public txTransferTo?: TransactionsTx;
-
-  public txTransferToCreatedAt?: Date;
 
   public walletId!: number;
 
   public readonly derivedWallet?: DerivedWallets;
+
+  public type!: OrderType;
+
+  public party!: Party;
+
+  public inTxId!: string;
+
+  public readonly inTx?: Txs;
+
+  public outTxId!: string;
+
+  public readonly outTx?: Txs;
 
   public readonly createdAt!: Date;
 
@@ -243,7 +214,9 @@ export class Transactions extends Model {
   public readonly version!: number;
 
   public static associations: {
-    derivedWallet: BelongsTo<Transactions, DerivedWallets>;
+    derivedWallet: BelongsTo<Orders, DerivedWallets>;
+    inTx: BelongsTo<Orders, Txs>;
+    outTx: BelongsTo<Orders, Txs>;
   };
 
   public getDerivedWallet!: BelongsToGetAssociationMixin<DerivedWallets>;
@@ -254,9 +227,23 @@ export class Transactions extends Model {
   >;
 
   public createDerivedWallet!: BelongsToCreateAssociationMixin<DerivedWallets>;
+
+  public getInTx: BelongsToGetAssociationMixin<Txs>;
+
+  public setInTx!: BelongsToSetAssociationMixin<Txs, string>;
+
+  public createInTx!: BelongsToCreateAssociationMixin<Txs>;
+
+  public getOutTx: BelongsToGetAssociationMixin<Txs>;
+
+  public setOutTx!: BelongsToSetAssociationMixin<Txs, string>;
+
+  public createOutTx!: BelongsToCreateAssociationMixin<Txs>;
 }
 
-export type Task<T> = () => Promise<T>;
+export interface Task<T> {
+  (): Promise<T>;
+}
 
 export type TransactionsCommitPrefix =
   | 'receive'
@@ -268,7 +255,7 @@ export type TransactionsCommitPrefix =
 export type TransactionsStatusPostfix = '' | 'commit';
 
 export async function transactionsCatchAndCommitError<T>(
-  job: Job,
+  _job: Job,
   model: Transactions,
   task: Task<T>,
   commitPrefix: TransactionsCommitPrefix,

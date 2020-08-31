@@ -2,7 +2,6 @@ import 'source-map-support/register';
 
 import './queue';
 import './web3';
-import './bitshares';
 import './worker';
 import './views';
 
@@ -24,6 +23,8 @@ createTerminus(server, {
 onStart.push(
   (async (): Promise<void> => {
     server.listen(appConfig.port);
+
+    return Promise.resolve();
   })()
 );
 
